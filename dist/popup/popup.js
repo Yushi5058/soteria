@@ -282,7 +282,7 @@ function renderSite() {
   siteToggle.disabled = false;
 }
 function renderPlatforms() {
-  platforms.innerHTML = "";
+  platforms.replaceChildren();
   const entries = Object.values(config.platformPresets);
   for (const p of entries) {
     const row = document.createElement("div");

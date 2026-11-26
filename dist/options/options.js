@@ -282,7 +282,7 @@ function render() {
 }
 function renderPlatforms() {
   const root = $("platforms");
-  root.innerHTML = "";
+  root.replaceChildren();
   for (const p of Object.values(config.platformPresets)) {
     const row = document.createElement("div");
     row.className = "platform";

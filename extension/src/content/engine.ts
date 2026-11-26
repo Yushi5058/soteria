@@ -20,10 +20,11 @@ export async function ensureEngine(): Promise<boolean> {
 }
 
 async function load(): Promise<void> {
-  const base = api?.runtime?.getURL ? api.runtime.getURL('wasm/') : 'wasm/';
+  const base = api?.runtime?.getURL ? api.runtime.getURL('wasm/') : '';
+  if (!base) throw new Error('runtime URL unavailable');
   // wasm-pack web target glue
-  const jsUrl = base + 'soteria_engine.js';
-  const wasmUrl = base + 'soteria_engine_bg.wasm';
+  const jsUrl = new URL('soteria_engine.js', base).toString();
+  const wasmUrl = new URL('soteria_engine_bg.wasm', base).toString();
   const mod: any = await import(/* @vite-ignore */ jsUrl);
   initFn = mod.default;
   initEngineFn = mod.init_engine;

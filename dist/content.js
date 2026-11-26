@@ -289,9 +289,10 @@ async function ensureEngine() {
   }
 }
 async function load() {
-  const base = api2?.runtime?.getURL ? api2.runtime.getURL("wasm/") : "wasm/";
-  const jsUrl = base + "soteria_engine.js";
-  const wasmUrl = base + "soteria_engine_bg.wasm";
+  const base = api2?.runtime?.getURL ? api2.runtime.getURL("wasm/") : "";
+  if (!base) throw new Error("runtime URL unavailable");
+  const jsUrl = new URL("soteria_engine.js", base).toString();
+  const wasmUrl = new URL("soteria_engine_bg.wasm", base).toString();
   const mod = await import(
     /* @vite-ignore */
     jsUrl

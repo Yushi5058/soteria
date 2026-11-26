@@ -19,7 +19,7 @@ Codeberg is the default remote. Pushes to `origin` auto-mirror to GitHub (config
 - **Social/contact heuristics**: best-effort name/phone masking in social/contact contexts (including unknown WhatsApp numbers/group labels) and profile-image blur heuristic.
 - **Deterministic masking**: same value maps to same scramble/random word during a session for visual consistency.
 - **User-friendly config**: popup quick controls, options page category toggles, custom name/place lists, JSON import/export with validation, reset to default.
-- **Cross-browser packaging**: MV3 manifest with Firefox compatibility settings; outputs `dist/` and `soteria-v1.0.0.xpi`.
+- **Cross-browser packaging**: MV3 manifest with Firefox/Chromium compatibility, AMO data collection declaration, and versioned artifacts.
 
 ## Repository layout
 
@@ -92,6 +92,12 @@ npm run package
 - Regex/literal detection is best-effort; validate with your own threat model.
 - Host permissions are broad (`<all_urls>`) for masking coverage; use per-site disable in popup/options where not wanted.
 
+## Firefox / AMO
+
+- Manifest includes `browser_specific_settings.gecko.data_collection_permissions.required=["none"]`.
+- `web-ext lint` warnings: `BACKGROUND_SERVICE_WORKER_IGNORED` (intentional cross-browser background), `UNSAFE_VAR_ASSIGNMENT` (runtime import of extension-packaged WASM glue URL).
+- See [`docs/FIREFOX_AMO.md`](docs/FIREFOX_AMO.md).
+
 ## Development
 
 See:
@@ -100,6 +106,7 @@ See:
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md)
 - [`docs/RELEASE.md`](docs/RELEASE.md)
 - [`docs/PUBLISHING.md`](docs/PUBLISHING.md)
+- [`docs/FIREFOX_AMO.md`](docs/FIREFOX_AMO.md)
 
 ## License
 
