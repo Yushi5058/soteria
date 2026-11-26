@@ -11,6 +11,7 @@
   "customNames": ["Yassine", "Roa", "Elias", "Amina", "Noah", "Maya"],
   "customPlaces": ["Springfield High School", "Acme University", "123 Main Street"],
   "customPatterns": [],
+  "disabledSites": [],
   "platformPresets": {
     "youtube": {
       "id": "youtube",

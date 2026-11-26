@@ -12,6 +12,7 @@ var default_config_default = {
   customNames: ["Yassine", "Roa", "Elias", "Amina", "Noah", "Maya"],
   customPlaces: ["Springfield High School", "Acme University", "123 Main Street"],
   customPatterns: [],
+  disabledSites: [],
   platformPresets: {
     youtube: {
       id: "youtube",
@@ -118,6 +119,7 @@ function normalizeConfig(input) {
     customNames: sanitizeStringArray(c.customNames, d.customNames),
     customPlaces: sanitizeStringArray(c.customPlaces, d.customPlaces),
     customPatterns: sanitizeRules(c.customPatterns),
+    disabledSites: sanitizeStringArray(c.disabledSites, d.disabledSites ?? []),
     platformPresets: sanitizePlatforms(c.platformPresets, d.platformPresets)
   };
   return cfg;
@@ -186,6 +188,9 @@ function validateConfigShape(input) {
     if (typeof r.category !== "string" || !r.category) errors.push(`customPatterns[${i}].category required`);
     if (typeof r.pattern !== "string" || !r.pattern) errors.push(`customPatterns[${i}].pattern required`);
   });
+  if (c.disabledSites !== void 0 && (!Array.isArray(c.disabledSites) || c.disabledSites.some((x) => typeof x !== "string"))) {
+    errors.push("disabledSites must be string[]");
+  }
   if (!c.platformPresets || typeof c.platformPresets !== "object") errors.push("platformPresets must be object");
   if (errors.length) return { ok: false, errors };
   return { ok: true, config: normalizeConfig(c) };
@@ -231,6 +236,11 @@ function bind() {
     config.customPlaces = parseList($("customPlaces").value);
     await persist(`Saved ${config.customPlaces.length} custom places/institutions.`);
   });
+  $("saveSites").addEventListener("click", async () => {
+    config.disabledSites = parseList($("disabledSites").value).map(normalizeHost).filter(Boolean);
+    await persist(`Saved ${config.disabledSites.length} disabled sites.`);
+    render();
+  });
   $("exportBtn").addEventListener("click", exportConfig);
   $("importInput").addEventListener("change", importConfig);
   $("resetBtn").addEventListener("click", resetDefaults);
@@ -242,6 +252,7 @@ function render() {
   $("maskMode").value = config.maskMode;
   $("customNames").value = config.customNames.join("\n");
   $("customPlaces").value = config.customPlaces.join("\n");
+  $("disabledSites").value = (config.disabledSites || []).join("\n");
   renderPlatforms();
 }
 function renderPlatforms() {
@@ -266,6 +277,16 @@ function renderPlatforms() {
 }
 function parseList(text) {
   return [...new Set(text.split(/[\n,]/).map((s) => s.trim()).filter(Boolean))];
+}
+function normalizeHost(v) {
+  const s = v.trim().toLowerCase();
+  if (!s) return "";
+  try {
+    const url = s.includes("://") ? new URL(s) : new URL("https://" + s);
+    return url.hostname.toLowerCase();
+  } catch {
+    return s.replace(/^\.+|\.+$/g, "");
+  }
 }
 async function persist(msg) {
   await setConfig(config);

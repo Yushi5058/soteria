@@ -35,6 +35,7 @@ export interface SoteriaConfig {
   customNames: string[];
   customPlaces: string[];
   customPatterns: Rule[];
+  disabledSites: string[];
   platformPresets: Record<string, PlatformPreset>;
 }
 

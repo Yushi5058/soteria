@@ -62,7 +62,10 @@ npm test
 
 ## Release workflow
 
-1. Bump version in `engine/Cargo.toml`, `package.json`, `extension/package.json`, `extension/src/manifest.json`.
-2. Run `npm test && npm run package`.
-3. Commit with Conventional Commits.
-4. Tag annotated `vX.Y.Z`.
+1. Bump version: `npm run version:bump -- X.Y.Z` (updates Cargo.toml, package.json files, manifest).
+2. Verify: `npm run version:check`.
+3. Test/build/package: `npm run release` (or `npm test && npm run package`).
+4. Update `CHANGELOG.md` and docs if needed.
+5. Commit with Conventional Commits.
+6. Tag annotated `vX.Y.Z` and push tag to trigger release workflow.
+7. Attach `artifacts/soteria-vX.Y.Z.xpi` and `.zip` to release; submit signed build to AMO if publishing Firefox.

@@ -3,12 +3,17 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+VERSION="${1:-$(node -p "require('./package.json').version")}"
+XPI="artifacts/soteria-v${VERSION}.xpi"
+ZIP="artifacts/soteria-v${VERSION}.zip"
+
 bash scripts/build.sh
 mkdir -p artifacts
 
 package_zip() {
   local out="$1"
   local abs="$ROOT/$out"
+  rm -f "$abs"
   if command -v zip >/dev/null 2>&1; then
     (cd dist && zip -qr "$abs" .)
   elif command -v 7z >/dev/null 2>&1; then
@@ -35,7 +40,7 @@ PY
   fi
 }
 
-package_zip "artifacts/soteria-v1.0.0.xpi"
-package_zip "artifacts/soteria-v1.0.0.zip"
-cp artifacts/soteria-v1.0.0.xpi ./soteria-v1.0.0.xpi
-echo "[soteria] packaged artifacts/soteria-v1.0.0.xpi"
+package_zip "$XPI"
+package_zip "$ZIP"
+cp "$XPI" "./soteria-v${VERSION}.xpi"
+echo "[soteria] packaged $XPI"

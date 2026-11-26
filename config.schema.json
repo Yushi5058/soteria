@@ -26,6 +26,10 @@
       "type": "array",
       "items": { "$ref": "#/$defs/rule" }
     },
+    "disabledSites": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
     "platformPresets": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/platform" }

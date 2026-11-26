@@ -31,6 +31,11 @@ function bind() {
     config.customPlaces = parseList($<HTMLTextAreaElement>('customPlaces').value);
     await persist(`Saved ${config.customPlaces.length} custom places/institutions.`);
   });
+  $<HTMLButtonElement>('saveSites').addEventListener('click', async () => {
+    config.disabledSites = parseList($<HTMLTextAreaElement>('disabledSites').value).map(normalizeHost).filter(Boolean);
+    await persist(`Saved ${config.disabledSites.length} disabled sites.`);
+    render();
+  });
   $<HTMLButtonElement>('exportBtn').addEventListener('click', exportConfig);
   $<HTMLInputElement>('importInput').addEventListener('change', importConfig);
   $<HTMLButtonElement>('resetBtn').addEventListener('click', resetDefaults);
@@ -43,6 +48,7 @@ function render() {
   $<HTMLSelectElement>('maskMode').value = config.maskMode;
   $<HTMLTextAreaElement>('customNames').value = config.customNames.join('\n');
   $<HTMLTextAreaElement>('customPlaces').value = config.customPlaces.join('\n');
+  $<HTMLTextAreaElement>('disabledSites').value = (config.disabledSites || []).join('\n');
   renderPlatforms();
 }
 
@@ -69,6 +75,17 @@ function renderPlatforms() {
 
 function parseList(text: string): string[] {
   return [...new Set(text.split(/[\n,]/).map((s) => s.trim()).filter(Boolean))];
+}
+
+function normalizeHost(v: string): string {
+  const s = v.trim().toLowerCase();
+  if (!s) return '';
+  try {
+    const url = s.includes('://') ? new URL(s) : new URL('https://' + s);
+    return url.hostname.toLowerCase();
+  } catch {
+    return s.replace(/^\.+|\.+$/g, '');
+  }
 }
 
 async function persist(msg: string) {

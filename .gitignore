@@ -12,7 +12,7 @@ node_modules/
 # Build artifacts
 /artifacts/
 *.xpi
-!soteria-v1.0.0.xpi
+!soteria-v*.xpi
 *.zip
 *.tsbuildinfo
 
@@ -37,3 +37,6 @@ yarn-error.log*
 
 # Generated WASM pkg
 /extension/src/wasm/pkg/
+
+# Test bundles
+/extension/.test-dist/

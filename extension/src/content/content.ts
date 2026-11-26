@@ -20,15 +20,24 @@ let idCounter = 1;
 
 const nextId = () => String(idCounter++);
 
+function siteDisabled(cfg: SoteriaConfig): boolean {
+  const host = location.hostname.toLowerCase();
+  return (cfg.disabledSites || []).some((entry) => {
+    const e = entry.toLowerCase().trim();
+    if (!e) return false;
+    return host === e || host.endsWith('.' + e);
+  });
+}
+
 async function main() {
   config = await getConfig();
   observeConfig(onConfigChange);
-  if (!config.enabled) return;
+  if (!config.enabled || siteDisabled(config)) return;
   await boot();
 }
 
 async function boot() {
-  if (!config?.enabled) return;
+  if (!config?.enabled || siteDisabled(config)) return;
   const ok = await ensureEngine();
   if (!ok) {
     console.warn('[Soteria] WASM engine unavailable');
@@ -42,7 +51,8 @@ async function boot() {
 function onConfigChange(next: SoteriaConfig) {
   const prev = config;
   config = next;
-  if (!next.enabled) {
+  const disabled = !next.enabled || siteDisabled(next);
+  if (disabled) {
     stopObserver();
     unmaskAll();
     return;
@@ -50,7 +60,8 @@ function onConfigChange(next: SoteriaConfig) {
   const changed = !prev ||
     prev.maskMode !== next.maskMode ||
     JSON.stringify(buildActiveRules(prev)) !== JSON.stringify(buildActiveRules(next)) ||
-    JSON.stringify(getSelectors(prev)) !== JSON.stringify(getSelectors(next));
+    JSON.stringify(getSelectors(prev)) !== JSON.stringify(getSelectors(next)) ||
+    JSON.stringify(prev.disabledSites || []) !== JSON.stringify(next.disabledSites || []);
 
   if (changed) {
     clearEngineSession();

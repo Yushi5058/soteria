@@ -8,11 +8,15 @@
     "build": "bash scripts/build.sh",
     "build:wasm": "cd engine && wasm-pack build --target web --out-dir ../extension/src/wasm/pkg --release",
     "build:ext": "cd extension && npm run build",
-    "test": "npm run test:engine && npm run test:ext",
+    "test": "npm run version:check && npm run test:engine && npm run test:ext",
     "test:engine": "cd engine && cargo test",
     "test:ext": "cd extension && npm run test",
     "package": "bash scripts/package.sh",
     "lint": "cd extension && npm run lint",
-    "clean": "rm -rf dist extension/dist extension/src/wasm/pkg engine/target engine/pkg"
+    "clean": "rm -rf dist extension/dist extension/src/wasm/pkg engine/target engine/pkg",
+    "version:check": "node scripts/check-version.mjs",
+    "version:bump": "node scripts/bump-version.mjs",
+    "release": "npm run version:check && npm test && npm run package",
+    "ci": "npm run test && npm run build"
   }
 }

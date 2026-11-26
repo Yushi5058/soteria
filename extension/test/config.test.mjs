@@ -8,6 +8,7 @@ const defaults = JSON.parse(fs.readFileSync(new URL('../src/shared/default-confi
 test('default config has required top-level keys', () => {
   for (const k of schema.required) assert.ok(k in defaults, `missing ${k}`);
   assert.equal(defaults.version, 1);
+  assert.ok(Array.isArray(defaults.disabledSites));
 });
 
 test('default config includes required platforms', () => {

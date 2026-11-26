@@ -12,6 +12,7 @@ var default_config_default = {
   customNames: ["Yassine", "Roa", "Elias", "Amina", "Noah", "Maya"],
   customPlaces: ["Springfield High School", "Acme University", "123 Main Street"],
   customPatterns: [],
+  disabledSites: [],
   platformPresets: {
     youtube: {
       id: "youtube",
@@ -118,6 +119,7 @@ function normalizeConfig(input) {
     customNames: sanitizeStringArray(c.customNames, d.customNames),
     customPlaces: sanitizeStringArray(c.customPlaces, d.customPlaces),
     customPatterns: sanitizeRules(c.customPatterns),
+    disabledSites: sanitizeStringArray(c.disabledSites, d.disabledSites ?? []),
     platformPresets: sanitizePlatforms(c.platformPresets, d.platformPresets)
   };
   return cfg;

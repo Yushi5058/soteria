@@ -59,7 +59,7 @@ npm test
 
 # package release artifacts
 npm run package
-# outputs: artifacts/soteria-v1.0.0.xpi, artifacts/soteria-v1.0.0.zip, ./soteria-v1.0.0.xpi
+# outputs: artifacts/soteria-v<version>.xpi, artifacts/soteria-v<version>.zip, ./soteria-v<version>.xpi
 ```
 
 ## Usage
@@ -80,6 +80,7 @@ npm run package
 - Runs locally in browser; no remote exfiltration by extension code.
 - Designed for screen-share anti-doxxing, not a substitute for data-loss prevention or backend redaction.
 - Regex/literal detection is best-effort; validate with your own threat model.
+- Host permissions are broad (`<all_urls>`) for masking coverage; use per-site disable in popup/options where not wanted.
 
 ## Development
 

@@ -24,6 +24,7 @@ export function normalizeConfig(input: unknown): SoteriaConfig {
     customNames: sanitizeStringArray(c.customNames, d.customNames),
     customPlaces: sanitizeStringArray(c.customPlaces, d.customPlaces),
     customPatterns: sanitizeRules(c.customPatterns),
+    disabledSites: sanitizeStringArray(c.disabledSites, d.disabledSites ?? []),
     platformPresets: sanitizePlatforms(c.platformPresets, d.platformPresets),
   };
   return cfg;
@@ -93,6 +94,9 @@ export function validateConfigShape(input: unknown): { ok: true; config: Soteria
     if (typeof r.category !== 'string' || !r.category) errors.push(`customPatterns[${i}].category required`);
     if (typeof r.pattern !== 'string' || !r.pattern) errors.push(`customPatterns[${i}].pattern required`);
   });
+  if (c.disabledSites !== undefined && (!Array.isArray(c.disabledSites) || c.disabledSites.some((x: any) => typeof x !== 'string'))) {
+    errors.push('disabledSites must be string[]');
+  }
   if (!c.platformPresets || typeof c.platformPresets !== 'object') errors.push('platformPresets must be object');
   if (errors.length) return { ok: false, errors };
   return { ok: true, config: normalizeConfig(c) };

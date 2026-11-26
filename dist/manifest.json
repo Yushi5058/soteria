@@ -5,7 +5,8 @@
   "description": "Privacy-first screen-share shield that hides sensitive information on web pages.",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"

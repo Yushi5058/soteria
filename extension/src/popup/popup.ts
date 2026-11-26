@@ -8,11 +8,15 @@ const catSocial = $<HTMLInputElement>('cat-socialMedia');
 const platforms = $<HTMLDivElement>('platforms');
 const openOptions = $<HTMLButtonElement>('openOptions');
 const status = $<HTMLSpanElement>('status');
+const siteToggle = $<HTMLButtonElement>('siteToggle');
+const siteHost = $<HTMLParagraphElement>('siteHost');
 
 let config: SoteriaConfig;
+let currentHost = '';
 
 async function init() {
   config = await getConfig();
+  await resolveHost();
   render();
   enabled.addEventListener('change', async () => {
     config.enabled = enabled.checked;
@@ -27,7 +31,25 @@ async function init() {
     await save('Saved');
     renderPlatforms();
   });
+  siteToggle.addEventListener('click', async () => {
+    if (!currentHost) return;
+    const set = new Set(config.disabledSites || []);
+    if (set.has(currentHost)) { set.delete(currentHost); await save('Enabled on site'); }
+    else { set.add(currentHost); await save('Disabled on site'); }
+    config.disabledSites = [...set];
+    await setConfig(config);
+    renderSite();
+  });
   openOptions.addEventListener('click', () => (globalThis as any).chrome.runtime.openOptionsPage());
+}
+
+async function resolveHost() {
+  try {
+    const api = (globalThis as any).chrome;
+    const [tab] = await api.tabs.query({ active: true, currentWindow: true });
+    const url = new URL(tab?.url || '');
+    currentHost = url.hostname || '';
+  } catch { currentHost = ''; }
 }
 
 function render() {
@@ -35,6 +57,14 @@ function render() {
   maskMode.value = config.maskMode;
   catSocial.checked = config.categories.socialMedia.enabled;
   renderPlatforms();
+  renderSite();
+}
+
+function renderSite() {
+  siteHost.textContent = currentHost || 'No active site';
+  const disabled = currentHost ? (config.disabledSites || []).includes(currentHost) : false;
+  siteToggle.textContent = disabled ? 'Enable here' : 'Disable here';
+  siteToggle.disabled = !currentHost;
 }
 
 function renderPlatforms() {
