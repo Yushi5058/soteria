@@ -1,0 +1,39 @@
+# Rust
+/engine/target/
+/engine/pkg/
+**/*.rs.bk
+
+# Node
+node_modules/
+/extension/node_modules/
+/extension/dist/
+/pkg-test/
+
+# Build artifacts
+/artifacts/
+*.xpi
+!soteria-v1.0.0.xpi
+*.zip
+*.tsbuildinfo
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Generated WASM pkg
+/extension/src/wasm/pkg/
