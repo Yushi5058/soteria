@@ -3,6 +3,7 @@ var default_config_default = {
   version: 1,
   enabled: true,
   maskMode: "random-word",
+  siteMode: "blocklist",
   categories: {
     apiKeys: { enabled: true },
     personalNames: { enabled: true },
@@ -13,6 +14,7 @@ var default_config_default = {
   customPlaces: ["Springfield High School", "Acme University", "123 Main Street"],
   customPatterns: [],
   disabledSites: [],
+  allowedSites: [],
   platformPresets: {
     youtube: {
       id: "youtube",
@@ -103,6 +105,9 @@ var DEFAULT_CONFIG = structuredClone(default_config_default);
 function isMaskMode(v) {
   return v === "blur" || v === "scramble" || v === "random-word";
 }
+function isSiteMode(v) {
+  return v === "blocklist" || v === "allowlist";
+}
 function normalizeConfig(input) {
   const d = DEFAULT_CONFIG;
   const c = input && typeof input === "object" ? input : {};
@@ -110,6 +115,7 @@ function normalizeConfig(input) {
     version: 1,
     enabled: typeof c.enabled === "boolean" ? c.enabled : d.enabled,
     maskMode: isMaskMode(c.maskMode) ? c.maskMode : d.maskMode,
+    siteMode: isSiteMode(c.siteMode) ? c.siteMode : d.siteMode ?? "blocklist",
     categories: {
       apiKeys: { enabled: c.categories?.apiKeys?.enabled ?? d.categories.apiKeys.enabled },
       personalNames: { enabled: c.categories?.personalNames?.enabled ?? d.categories.personalNames.enabled },
@@ -120,6 +126,7 @@ function normalizeConfig(input) {
     customPlaces: sanitizeStringArray(c.customPlaces, d.customPlaces),
     customPatterns: sanitizeRules(c.customPatterns),
     disabledSites: sanitizeStringArray(c.disabledSites, d.disabledSites ?? []),
+    allowedSites: sanitizeStringArray(c.allowedSites, d.allowedSites ?? []),
     platformPresets: sanitizePlatforms(c.platformPresets, d.platformPresets)
   };
   return cfg;
@@ -207,15 +214,27 @@ async function init() {
   });
   siteToggle.addEventListener("click", async () => {
     if (!currentHost) return;
-    const set = new Set(config.disabledSites || []);
-    if (set.has(currentHost)) {
-      set.delete(currentHost);
-      await save("Enabled on site");
+    if ((config.siteMode || "blocklist") === "allowlist") {
+      const set = new Set(config.allowedSites || []);
+      if (set.has(currentHost)) {
+        set.delete(currentHost);
+        await save("Removed from allowlist");
+      } else {
+        set.add(currentHost);
+        await save("Added to allowlist");
+      }
+      config.allowedSites = [...set];
     } else {
-      set.add(currentHost);
-      await save("Disabled on site");
+      const set = new Set(config.disabledSites || []);
+      if (set.has(currentHost)) {
+        set.delete(currentHost);
+        await save("Enabled on site");
+      } else {
+        set.add(currentHost);
+        await save("Disabled on site");
+      }
+      config.disabledSites = [...set];
     }
-    config.disabledSites = [...set];
     await setConfig(config);
     renderSite();
   });
@@ -240,9 +259,20 @@ function render() {
 }
 function renderSite() {
   siteHost.textContent = currentHost || "No active site";
-  const disabled = currentHost ? (config.disabledSites || []).includes(currentHost) : false;
-  siteToggle.textContent = disabled ? "Enable here" : "Disable here";
-  siteToggle.disabled = !currentHost;
+  const mode = config.siteMode || "blocklist";
+  if (!currentHost) {
+    siteToggle.textContent = "Unavailable";
+    siteToggle.disabled = true;
+    return;
+  }
+  if (mode === "allowlist") {
+    const allowed = (config.allowedSites || []).includes(currentHost);
+    siteToggle.textContent = allowed ? "Remove from allowlist" : "Allow this site";
+  } else {
+    const disabled = (config.disabledSites || []).includes(currentHost);
+    siteToggle.textContent = disabled ? "Enable here" : "Disable here";
+  }
+  siteToggle.disabled = false;
 }
 function renderPlatforms() {
   platforms.innerHTML = "";

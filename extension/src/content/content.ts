@@ -10,6 +10,8 @@ const processedText = new WeakSet<Text>();
 const processedAttr = new WeakMap<Element, Set<string>>();
 const originalAttrs = new WeakMap<Element, Map<string, string>>();
 const trackedAttrElements = new Set<Element>();
+const MAX_BATCH_CHARS = 12000;
+const MAX_BATCH_ITEMS = 300;
 
 let config: SoteriaConfig | null = null;
 let activeSelectors: string[] = [];
@@ -20,13 +22,20 @@ let idCounter = 1;
 
 const nextId = () => String(idCounter++);
 
+function hostMatches(host: string, entry: string): boolean {
+  const e = entry.toLowerCase().trim();
+  if (!e) return false;
+  return host === e || host.endsWith('.' + e);
+}
+
 function siteDisabled(cfg: SoteriaConfig): boolean {
   const host = location.hostname.toLowerCase();
-  return (cfg.disabledSites || []).some((entry) => {
-    const e = entry.toLowerCase().trim();
-    if (!e) return false;
-    return host === e || host.endsWith('.' + e);
-  });
+  const mode = cfg.siteMode || 'blocklist';
+  if (mode === 'allowlist') {
+    const allow = cfg.allowedSites || [];
+    return allow.length > 0 ? !allow.some((e) => hostMatches(host, e)) : false;
+  }
+  return (cfg.disabledSites || []).some((e) => hostMatches(host, e));
 }
 
 async function main() {
@@ -59,9 +68,11 @@ function onConfigChange(next: SoteriaConfig) {
   }
   const changed = !prev ||
     prev.maskMode !== next.maskMode ||
+    prev.siteMode !== next.siteMode ||
     JSON.stringify(buildActiveRules(prev)) !== JSON.stringify(buildActiveRules(next)) ||
     JSON.stringify(getSelectors(prev)) !== JSON.stringify(getSelectors(next)) ||
-    JSON.stringify(prev.disabledSites || []) !== JSON.stringify(next.disabledSites || []);
+    JSON.stringify(prev.disabledSites || []) !== JSON.stringify(next.disabledSites || []) ||
+    JSON.stringify(prev.allowedSites || []) !== JSON.stringify(next.allowedSites || []);
 
   if (changed) {
     clearEngineSession();
@@ -154,7 +165,21 @@ async function flush() {
   for (const j of textJobs) batch.push({ id: `t:${j.id}`, text: j.text });
   for (const j of attrJobs) batch.push({ id: `a:${j.id}`, text: j.text });
 
-  const byId = new Map<string, ScanResult>(scanBatch(batch, config.maskMode).map((r) => [r.id, r]));
+  const byId = new Map<string, ScanResult>();
+  for (let i = 0; i < batch.length;) {
+    let chars = 0;
+    const chunk: ScanInput[] = [];
+    while (i < batch.length && chunk.length < MAX_BATCH_ITEMS) {
+      const item = batch[i];
+      const len = item.text.length;
+      if (chunk.length && chars + len > MAX_BATCH_CHARS) break;
+      chunk.push(item);
+      chars += len;
+      i++;
+      if (chars >= MAX_BATCH_CHARS) break;
+    }
+    for (const r of scanBatch(chunk, config.maskMode)) byId.set(r.id, r);
+  }
 
   for (const j of textJobs) {
     const r = byId.get(`t:${j.id}`);

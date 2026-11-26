@@ -4,68 +4,190 @@
   "title": "SoteriaConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "enabled", "maskMode", "categories", "customNames", "customPlaces", "customPatterns", "platformPresets"],
+  "required": [
+    "version",
+    "enabled",
+    "maskMode",
+    "categories",
+    "customNames",
+    "customPlaces",
+    "customPatterns",
+    "platformPresets"
+  ],
   "properties": {
-    "version": { "const": 1 },
-    "enabled": { "type": "boolean" },
-    "maskMode": { "enum": ["blur", "scramble", "random-word"] },
+    "version": {
+      "const": 1
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "maskMode": {
+      "enum": [
+        "blur",
+        "scramble",
+        "random-word"
+      ]
+    },
     "categories": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["apiKeys", "personalNames", "addressesPlaces", "socialMedia"],
+      "required": [
+        "apiKeys",
+        "personalNames",
+        "addressesPlaces",
+        "socialMedia"
+      ],
       "properties": {
-        "apiKeys": { "$ref": "#/$defs/category" },
-        "personalNames": { "$ref": "#/$defs/category" },
-        "addressesPlaces": { "$ref": "#/$defs/category" },
-        "socialMedia": { "$ref": "#/$defs/category" }
+        "apiKeys": {
+          "$ref": "#/$defs/category"
+        },
+        "personalNames": {
+          "$ref": "#/$defs/category"
+        },
+        "addressesPlaces": {
+          "$ref": "#/$defs/category"
+        },
+        "socialMedia": {
+          "$ref": "#/$defs/category"
+        }
       }
     },
-    "customNames": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-    "customPlaces": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "customNames": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "customPlaces": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "customPatterns": {
       "type": "array",
-      "items": { "$ref": "#/$defs/rule" }
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
     },
     "disabledSites": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "platformPresets": {
       "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/platform" }
+      "additionalProperties": {
+        "$ref": "#/$defs/platform"
+      }
+    },
+    "siteMode": {
+      "enum": [
+        "blocklist",
+        "allowlist"
+      ]
+    },
+    "allowedSites": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     }
   },
   "$defs": {
     "category": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["enabled"],
-      "properties": { "enabled": { "type": "boolean" } }
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
     },
     "rule": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "category", "pattern"],
+      "required": [
+        "id",
+        "category",
+        "pattern"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "category": { "type": "string", "minLength": 1 },
-        "pattern": { "type": "string", "minLength": 1 },
-        "literal": { "type": "boolean" },
-        "caseInsensitive": { "type": "boolean" },
-        "mask": { "enum": ["blur", "scramble", "random-word", "inherit"] },
-        "description": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "literal": {
+          "type": "boolean"
+        },
+        "caseInsensitive": {
+          "type": "boolean"
+        },
+        "mask": {
+          "enum": [
+            "blur",
+            "scramble",
+            "random-word",
+            "inherit"
+          ]
+        },
+        "description": {
+          "type": "string"
+        }
       }
     },
     "platform": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "hostPatterns", "selectors", "enabled"],
+      "required": [
+        "id",
+        "name",
+        "hostPatterns",
+        "selectors",
+        "enabled"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "name": { "type": "string", "minLength": 1 },
-        "enabled": { "type": "boolean" },
-        "hostPatterns": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "selectors": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "hostPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "selectors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     }
   }

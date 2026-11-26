@@ -3,6 +3,7 @@ var default_config_default = {
   version: 1,
   enabled: true,
   maskMode: "random-word",
+  siteMode: "blocklist",
   categories: {
     apiKeys: { enabled: true },
     personalNames: { enabled: true },
@@ -13,6 +14,7 @@ var default_config_default = {
   customPlaces: ["Springfield High School", "Acme University", "123 Main Street"],
   customPatterns: [],
   disabledSites: [],
+  allowedSites: [],
   platformPresets: {
     youtube: {
       id: "youtube",
@@ -103,6 +105,9 @@ var DEFAULT_CONFIG = structuredClone(default_config_default);
 function isMaskMode(v) {
   return v === "blur" || v === "scramble" || v === "random-word";
 }
+function isSiteMode(v) {
+  return v === "blocklist" || v === "allowlist";
+}
 function normalizeConfig(input) {
   const d = DEFAULT_CONFIG;
   const c = input && typeof input === "object" ? input : {};
@@ -110,6 +115,7 @@ function normalizeConfig(input) {
     version: 1,
     enabled: typeof c.enabled === "boolean" ? c.enabled : d.enabled,
     maskMode: isMaskMode(c.maskMode) ? c.maskMode : d.maskMode,
+    siteMode: isSiteMode(c.siteMode) ? c.siteMode : d.siteMode ?? "blocklist",
     categories: {
       apiKeys: { enabled: c.categories?.apiKeys?.enabled ?? d.categories.apiKeys.enabled },
       personalNames: { enabled: c.categories?.personalNames?.enabled ?? d.categories.personalNames.enabled },
@@ -120,6 +126,7 @@ function normalizeConfig(input) {
     customPlaces: sanitizeStringArray(c.customPlaces, d.customPlaces),
     customPatterns: sanitizeRules(c.customPatterns),
     disabledSites: sanitizeStringArray(c.disabledSites, d.disabledSites ?? []),
+    allowedSites: sanitizeStringArray(c.allowedSites, d.allowedSites ?? []),
     platformPresets: sanitizePlatforms(c.platformPresets, d.platformPresets)
   };
   return cfg;
@@ -188,8 +195,12 @@ function validateConfigShape(input) {
     if (typeof r.category !== "string" || !r.category) errors.push(`customPatterns[${i}].category required`);
     if (typeof r.pattern !== "string" || !r.pattern) errors.push(`customPatterns[${i}].pattern required`);
   });
+  if (c.siteMode !== void 0 && !isSiteMode(c.siteMode)) errors.push("siteMode must be blocklist|allowlist");
   if (c.disabledSites !== void 0 && (!Array.isArray(c.disabledSites) || c.disabledSites.some((x) => typeof x !== "string"))) {
     errors.push("disabledSites must be string[]");
+  }
+  if (c.allowedSites !== void 0 && (!Array.isArray(c.allowedSites) || c.allowedSites.some((x) => typeof x !== "string"))) {
+    errors.push("allowedSites must be string[]");
   }
   if (!c.platformPresets || typeof c.platformPresets !== "object") errors.push("platformPresets must be object");
   if (errors.length) return { ok: false, errors };
@@ -236,9 +247,14 @@ function bind() {
     config.customPlaces = parseList($("customPlaces").value);
     await persist(`Saved ${config.customPlaces.length} custom places/institutions.`);
   });
+  $("siteMode").addEventListener("change", async (e) => {
+    config.siteMode = e.target.value;
+    await persist("Saved site mode.");
+  });
   $("saveSites").addEventListener("click", async () => {
     config.disabledSites = parseList($("disabledSites").value).map(normalizeHost).filter(Boolean);
-    await persist(`Saved ${config.disabledSites.length} disabled sites.`);
+    config.allowedSites = parseList($("allowedSites").value).map(normalizeHost).filter(Boolean);
+    await persist(`Saved site scope (${config.siteMode}).`);
     render();
   });
   $("exportBtn").addEventListener("click", exportConfig);
@@ -252,7 +268,9 @@ function render() {
   $("maskMode").value = config.maskMode;
   $("customNames").value = config.customNames.join("\n");
   $("customPlaces").value = config.customPlaces.join("\n");
+  $("siteMode").value = config.siteMode || "blocklist";
   $("disabledSites").value = (config.disabledSites || []).join("\n");
+  $("allowedSites").value = (config.allowedSites || []).join("\n");
   renderPlatforms();
 }
 function renderPlatforms() {

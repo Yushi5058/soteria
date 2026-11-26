@@ -11,10 +11,10 @@ export const BUILTIN_RULES: Rule[] = [
   { id: 'jwt', category: 'apiKeys', pattern: '\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b', mask: 'scramble', description: 'JWT' },
   { id: 'generic-secret', category: 'apiKeys', pattern: '\\b(?:api[_-]?key|secret|token|password|passwd|pwd)\\b\\s*[:=]\\s*[\"\']?[A-Za-z0-9\\-._~+/]{16,}[\"\']?', mask: 'scramble', description: 'Generic secret assignment' },
   { id: 'email', category: 'personalNames', pattern: '\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b', mask: 'scramble', description: 'Email address' },
-  { id: 'phone', category: 'addressesPlaces', pattern: '\\b(?:\\+?\\d{1,3}[\\s.-]?)?(?:\\(\\d{2,4}\\)|\\d{2,4})[\\s.-]?\\d{3,4}[\\s.-]?\\d{3,4}\\b', mask: 'scramble', description: 'Phone number' },
+  { id: 'phone', category: 'addressesPlaces', pattern: '\\b(?:\\+?\\d{1,3}[\\s.-]?)?(?:\\(\\d{2,4}\\)|\\d{2,4})[\\s.-]\\d{3,4}[\\s.-]\\d{3,4}\\b', mask: 'scramble', description: 'Phone number' },
   { id: 'street-address', category: 'addressesPlaces', pattern: '\\b\\d{1,5}\\s+[A-Z][a-zA-Z]+(?:\\s+[A-Z][a-zA-Z]+){0,3}\\s+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl)\\.?\\b', mask: 'random-word', description: 'Street address' },
   { id: 'postal-code', category: 'addressesPlaces', pattern: '\\b\\d{5}(?:-\\d{4})?\\b|\\b[A-Z]\\d[A-Z][ -]?\\d[A-Z]\\d\\b', mask: 'scramble', description: 'Postal code' },
-  { id: 'institution', category: 'addressesPlaces', pattern: '\\b[A-Z][a-zA-Z&]+(?:\\s+[A-Z][a-zA-Z&]+){0,4}\\s+(?:University|College|Institute|School|Academy|Hospital|Company|Inc|LLC|Ltd|GmbH)\\b', mask: 'random-word', description: 'Institution/workplace' },
+  { id: 'institution', category: 'addressesPlaces', pattern: '\\b[A-Z][a-zA-Z&\']+(?:\\s+[A-Z][a-zA-Z&\']+){0,4}\\s+(?:University|College|Institute|School|Academy|Hospital|Medical Center|Company|Corporation|Inc\\.?|LLC|Ltd\\.?|GmbH)\\b', mask: 'random-word', description: 'Institution/workplace' },
 ];
 
 function escapeRegex(s: string): string {
@@ -31,6 +31,7 @@ export function buildActiveRules(config: SoteriaConfig): Rule[] {
     for (const name of config.customNames) {
       const n = name.trim();
       if (!n) continue;
+      if (n.length < 2) continue;
       rules.push({
         id: `name:${n.toLowerCase()}`,
         category: 'personalNames',
@@ -46,10 +47,11 @@ export function buildActiveRules(config: SoteriaConfig): Rule[] {
     for (const place of config.customPlaces) {
       const p = place.trim();
       if (!p) continue;
+      if (p.length < 3) continue;
       rules.push({
         id: `place:${p.toLowerCase()}`,
         category: 'addressesPlaces',
-        pattern: escapeRegex(p),
+        pattern: `\\b${escapeRegex(p)}\\b`,
         literal: false,
         caseInsensitive: true,
         mask: 'random-word',

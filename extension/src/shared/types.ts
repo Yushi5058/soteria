@@ -22,10 +22,13 @@ export interface CategoryConfig {
   enabled: boolean;
 }
 
+export type SiteMode = 'blocklist' | 'allowlist';
+
 export interface SoteriaConfig {
   version: 1;
   enabled: boolean;
   maskMode: MaskMode;
+  siteMode: SiteMode;
   categories: {
     apiKeys: CategoryConfig;
     personalNames: CategoryConfig;
@@ -36,6 +39,7 @@ export interface SoteriaConfig {
   customPlaces: string[];
   customPatterns: Rule[];
   disabledSites: string[];
+  allowedSites: string[];
   platformPresets: Record<string, PlatformPreset>;
 }
 

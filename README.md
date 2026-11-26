@@ -88,6 +88,8 @@ See:
 - [`docs/OVERVIEW.md`](docs/OVERVIEW.md)
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md)
+- [`docs/RELEASE.md`](docs/RELEASE.md)
+- [`docs/PUBLISHING.md`](docs/PUBLISHING.md)
 
 ## License
 

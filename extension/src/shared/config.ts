@@ -1,11 +1,15 @@
 import defaultConfigRaw from './default-config.json';
-import type { SoteriaConfig, Rule, PlatformPreset, MaskMode } from './types';
+import type { SoteriaConfig, Rule, PlatformPreset, MaskMode, SiteMode } from './types';
 
 export const STORAGE_KEY = 'soteriaConfig';
 export const DEFAULT_CONFIG: SoteriaConfig = structuredClone(defaultConfigRaw as SoteriaConfig);
 
 export function isMaskMode(v: unknown): v is MaskMode {
   return v === 'blur' || v === 'scramble' || v === 'random-word';
+}
+
+export function isSiteMode(v: unknown): v is SiteMode {
+  return v === 'blocklist' || v === 'allowlist';
 }
 
 export function normalizeConfig(input: unknown): SoteriaConfig {
@@ -15,6 +19,7 @@ export function normalizeConfig(input: unknown): SoteriaConfig {
     version: 1,
     enabled: typeof c.enabled === 'boolean' ? c.enabled : d.enabled,
     maskMode: isMaskMode(c.maskMode) ? c.maskMode : d.maskMode,
+    siteMode: isSiteMode((c as any).siteMode) ? (c as any).siteMode : (d.siteMode ?? 'blocklist'),
     categories: {
       apiKeys: { enabled: c.categories?.apiKeys?.enabled ?? d.categories.apiKeys.enabled },
       personalNames: { enabled: c.categories?.personalNames?.enabled ?? d.categories.personalNames.enabled },
@@ -24,7 +29,8 @@ export function normalizeConfig(input: unknown): SoteriaConfig {
     customNames: sanitizeStringArray(c.customNames, d.customNames),
     customPlaces: sanitizeStringArray(c.customPlaces, d.customPlaces),
     customPatterns: sanitizeRules(c.customPatterns),
-    disabledSites: sanitizeStringArray(c.disabledSites, d.disabledSites ?? []),
+    disabledSites: sanitizeStringArray((c as any).disabledSites, d.disabledSites ?? []),
+    allowedSites: sanitizeStringArray((c as any).allowedSites, d.allowedSites ?? []),
     platformPresets: sanitizePlatforms(c.platformPresets, d.platformPresets),
   };
   return cfg;
@@ -94,8 +100,12 @@ export function validateConfigShape(input: unknown): { ok: true; config: Soteria
     if (typeof r.category !== 'string' || !r.category) errors.push(`customPatterns[${i}].category required`);
     if (typeof r.pattern !== 'string' || !r.pattern) errors.push(`customPatterns[${i}].pattern required`);
   });
+  if (c.siteMode !== undefined && !isSiteMode(c.siteMode)) errors.push('siteMode must be blocklist|allowlist');
   if (c.disabledSites !== undefined && (!Array.isArray(c.disabledSites) || c.disabledSites.some((x: any) => typeof x !== 'string'))) {
     errors.push('disabledSites must be string[]');
+  }
+  if (c.allowedSites !== undefined && (!Array.isArray(c.allowedSites) || c.allowedSites.some((x: any) => typeof x !== 'string'))) {
+    errors.push('allowedSites must be string[]');
   }
   if (!c.platformPresets || typeof c.platformPresets !== 'object') errors.push('platformPresets must be object');
   if (errors.length) return { ok: false, errors };

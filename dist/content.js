@@ -3,6 +3,7 @@ var default_config_default = {
   version: 1,
   enabled: true,
   maskMode: "random-word",
+  siteMode: "blocklist",
   categories: {
     apiKeys: { enabled: true },
     personalNames: { enabled: true },
@@ -13,6 +14,7 @@ var default_config_default = {
   customPlaces: ["Springfield High School", "Acme University", "123 Main Street"],
   customPatterns: [],
   disabledSites: [],
+  allowedSites: [],
   platformPresets: {
     youtube: {
       id: "youtube",
@@ -103,6 +105,9 @@ var DEFAULT_CONFIG = structuredClone(default_config_default);
 function isMaskMode(v) {
   return v === "blur" || v === "scramble" || v === "random-word";
 }
+function isSiteMode(v) {
+  return v === "blocklist" || v === "allowlist";
+}
 function normalizeConfig(input) {
   const d = DEFAULT_CONFIG;
   const c = input && typeof input === "object" ? input : {};
@@ -110,6 +115,7 @@ function normalizeConfig(input) {
     version: 1,
     enabled: typeof c.enabled === "boolean" ? c.enabled : d.enabled,
     maskMode: isMaskMode(c.maskMode) ? c.maskMode : d.maskMode,
+    siteMode: isSiteMode(c.siteMode) ? c.siteMode : d.siteMode ?? "blocklist",
     categories: {
       apiKeys: { enabled: c.categories?.apiKeys?.enabled ?? d.categories.apiKeys.enabled },
       personalNames: { enabled: c.categories?.personalNames?.enabled ?? d.categories.personalNames.enabled },
@@ -120,6 +126,7 @@ function normalizeConfig(input) {
     customPlaces: sanitizeStringArray(c.customPlaces, d.customPlaces),
     customPatterns: sanitizeRules(c.customPatterns),
     disabledSites: sanitizeStringArray(c.disabledSites, d.disabledSites ?? []),
+    allowedSites: sanitizeStringArray(c.allowedSites, d.allowedSites ?? []),
     platformPresets: sanitizePlatforms(c.platformPresets, d.platformPresets)
   };
   return cfg;
@@ -194,10 +201,10 @@ var BUILTIN_RULES = [
   { id: "jwt", category: "apiKeys", pattern: "\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b", mask: "scramble", description: "JWT" },
   { id: "generic-secret", category: "apiKeys", pattern: `\\b(?:api[_-]?key|secret|token|password|passwd|pwd)\\b\\s*[:=]\\s*["']?[A-Za-z0-9\\-._~+/]{16,}["']?`, mask: "scramble", description: "Generic secret assignment" },
   { id: "email", category: "personalNames", pattern: "\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b", mask: "scramble", description: "Email address" },
-  { id: "phone", category: "addressesPlaces", pattern: "\\b(?:\\+?\\d{1,3}[\\s.-]?)?(?:\\(\\d{2,4}\\)|\\d{2,4})[\\s.-]?\\d{3,4}[\\s.-]?\\d{3,4}\\b", mask: "scramble", description: "Phone number" },
+  { id: "phone", category: "addressesPlaces", pattern: "\\b(?:\\+?\\d{1,3}[\\s.-]?)?(?:\\(\\d{2,4}\\)|\\d{2,4})[\\s.-]\\d{3,4}[\\s.-]\\d{3,4}\\b", mask: "scramble", description: "Phone number" },
   { id: "street-address", category: "addressesPlaces", pattern: "\\b\\d{1,5}\\s+[A-Z][a-zA-Z]+(?:\\s+[A-Z][a-zA-Z]+){0,3}\\s+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl)\\.?\\b", mask: "random-word", description: "Street address" },
   { id: "postal-code", category: "addressesPlaces", pattern: "\\b\\d{5}(?:-\\d{4})?\\b|\\b[A-Z]\\d[A-Z][ -]?\\d[A-Z]\\d\\b", mask: "scramble", description: "Postal code" },
-  { id: "institution", category: "addressesPlaces", pattern: "\\b[A-Z][a-zA-Z&]+(?:\\s+[A-Z][a-zA-Z&]+){0,4}\\s+(?:University|College|Institute|School|Academy|Hospital|Company|Inc|LLC|Ltd|GmbH)\\b", mask: "random-word", description: "Institution/workplace" }
+  { id: "institution", category: "addressesPlaces", pattern: "\\b[A-Z][a-zA-Z&']+(?:\\s+[A-Z][a-zA-Z&']+){0,4}\\s+(?:University|College|Institute|School|Academy|Hospital|Medical Center|Company|Corporation|Inc\\.?|LLC|Ltd\\.?|GmbH)\\b", mask: "random-word", description: "Institution/workplace" }
 ];
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -212,6 +219,7 @@ function buildActiveRules(config2) {
     for (const name of config2.customNames) {
       const n = name.trim();
       if (!n) continue;
+      if (n.length < 2) continue;
       rules.push({
         id: `name:${n.toLowerCase()}`,
         category: "personalNames",
@@ -227,10 +235,11 @@ function buildActiveRules(config2) {
     for (const place of config2.customPlaces) {
       const p = place.trim();
       if (!p) continue;
+      if (p.length < 3) continue;
       rules.push({
         id: `place:${p.toLowerCase()}`,
         category: "addressesPlaces",
-        pattern: escapeRegex(p),
+        pattern: `\\b${escapeRegex(p)}\\b`,
         literal: false,
         caseInsensitive: true,
         mask: "random-word"
@@ -316,6 +325,8 @@ var processedText = /* @__PURE__ */ new WeakSet();
 var processedAttr = /* @__PURE__ */ new WeakMap();
 var originalAttrs = /* @__PURE__ */ new WeakMap();
 var trackedAttrElements = /* @__PURE__ */ new Set();
+var MAX_BATCH_CHARS = 12e3;
+var MAX_BATCH_ITEMS = 300;
 var config = null;
 var activeSelectors = [];
 var pendingNodes = /* @__PURE__ */ new Set();
@@ -323,13 +334,19 @@ var flushTimer = null;
 var observer = null;
 var idCounter = 1;
 var nextId = () => String(idCounter++);
+function hostMatches(host, entry) {
+  const e = entry.toLowerCase().trim();
+  if (!e) return false;
+  return host === e || host.endsWith("." + e);
+}
 function siteDisabled(cfg) {
   const host = location.hostname.toLowerCase();
-  return (cfg.disabledSites || []).some((entry) => {
-    const e = entry.toLowerCase().trim();
-    if (!e) return false;
-    return host === e || host.endsWith("." + e);
-  });
+  const mode = cfg.siteMode || "blocklist";
+  if (mode === "allowlist") {
+    const allow = cfg.allowedSites || [];
+    return allow.length > 0 ? !allow.some((e) => hostMatches(host, e)) : false;
+  }
+  return (cfg.disabledSites || []).some((e) => hostMatches(host, e));
 }
 async function main() {
   config = await getConfig();
@@ -357,7 +374,7 @@ function onConfigChange(next) {
     unmaskAll();
     return;
   }
-  const changed = !prev || prev.maskMode !== next.maskMode || JSON.stringify(buildActiveRules(prev)) !== JSON.stringify(buildActiveRules(next)) || JSON.stringify(getSelectors(prev)) !== JSON.stringify(getSelectors(next)) || JSON.stringify(prev.disabledSites || []) !== JSON.stringify(next.disabledSites || []);
+  const changed = !prev || prev.maskMode !== next.maskMode || prev.siteMode !== next.siteMode || JSON.stringify(buildActiveRules(prev)) !== JSON.stringify(buildActiveRules(next)) || JSON.stringify(getSelectors(prev)) !== JSON.stringify(getSelectors(next)) || JSON.stringify(prev.disabledSites || []) !== JSON.stringify(next.disabledSites || []) || JSON.stringify(prev.allowedSites || []) !== JSON.stringify(next.allowedSites || []);
   if (changed) {
     clearEngineSession();
     unmaskAll();
@@ -446,7 +463,21 @@ async function flush() {
   const batch = [];
   for (const j of textJobs) batch.push({ id: `t:${j.id}`, text: j.text });
   for (const j of attrJobs) batch.push({ id: `a:${j.id}`, text: j.text });
-  const byId = new Map(scanBatch(batch, config.maskMode).map((r) => [r.id, r]));
+  const byId = /* @__PURE__ */ new Map();
+  for (let i = 0; i < batch.length; ) {
+    let chars = 0;
+    const chunk = [];
+    while (i < batch.length && chunk.length < MAX_BATCH_ITEMS) {
+      const item = batch[i];
+      const len = item.text.length;
+      if (chunk.length && chars + len > MAX_BATCH_CHARS) break;
+      chunk.push(item);
+      chars += len;
+      i++;
+      if (chars >= MAX_BATCH_CHARS) break;
+    }
+    for (const r of scanBatch(chunk, config.maskMode)) byId.set(r.id, r);
+  }
   for (const j of textJobs) {
     const r = byId.get(`t:${j.id}`);
     if (r?.matches.length) applyTextMask(j.node, r, config.maskMode);

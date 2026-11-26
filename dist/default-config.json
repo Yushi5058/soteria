@@ -2,6 +2,7 @@
   "version": 1,
   "enabled": true,
   "maskMode": "random-word",
+  "siteMode": "blocklist",
   "categories": {
     "apiKeys": { "enabled": true },
     "personalNames": { "enabled": true },
@@ -12,6 +13,7 @@
   "customPlaces": ["Springfield High School", "Acme University", "123 Main Street"],
   "customPatterns": [],
   "disabledSites": [],
+  "allowedSites": [],
   "platformPresets": {
     "youtube": {
       "id": "youtube",

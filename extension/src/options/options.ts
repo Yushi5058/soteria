@@ -31,9 +31,14 @@ function bind() {
     config.customPlaces = parseList($<HTMLTextAreaElement>('customPlaces').value);
     await persist(`Saved ${config.customPlaces.length} custom places/institutions.`);
   });
+  $<HTMLSelectElement>('siteMode').addEventListener('change', async (e) => {
+    config.siteMode = (e.target as HTMLSelectElement).value as any;
+    await persist('Saved site mode.');
+  });
   $<HTMLButtonElement>('saveSites').addEventListener('click', async () => {
     config.disabledSites = parseList($<HTMLTextAreaElement>('disabledSites').value).map(normalizeHost).filter(Boolean);
-    await persist(`Saved ${config.disabledSites.length} disabled sites.`);
+    config.allowedSites = parseList($<HTMLTextAreaElement>('allowedSites').value).map(normalizeHost).filter(Boolean);
+    await persist(`Saved site scope (${config.siteMode}).`);
     render();
   });
   $<HTMLButtonElement>('exportBtn').addEventListener('click', exportConfig);
@@ -48,7 +53,9 @@ function render() {
   $<HTMLSelectElement>('maskMode').value = config.maskMode;
   $<HTMLTextAreaElement>('customNames').value = config.customNames.join('\n');
   $<HTMLTextAreaElement>('customPlaces').value = config.customPlaces.join('\n');
+  $<HTMLSelectElement>('siteMode').value = config.siteMode || 'blocklist';
   $<HTMLTextAreaElement>('disabledSites').value = (config.disabledSites || []).join('\n');
+  $<HTMLTextAreaElement>('allowedSites').value = (config.allowedSites || []).join('\n');
   renderPlatforms();
 }
 

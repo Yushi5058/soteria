@@ -33,10 +33,17 @@ async function init() {
   });
   siteToggle.addEventListener('click', async () => {
     if (!currentHost) return;
-    const set = new Set(config.disabledSites || []);
-    if (set.has(currentHost)) { set.delete(currentHost); await save('Enabled on site'); }
-    else { set.add(currentHost); await save('Disabled on site'); }
-    config.disabledSites = [...set];
+    if ((config.siteMode || 'blocklist') === 'allowlist') {
+      const set = new Set(config.allowedSites || []);
+      if (set.has(currentHost)) { set.delete(currentHost); await save('Removed from allowlist'); }
+      else { set.add(currentHost); await save('Added to allowlist'); }
+      config.allowedSites = [...set];
+    } else {
+      const set = new Set(config.disabledSites || []);
+      if (set.has(currentHost)) { set.delete(currentHost); await save('Enabled on site'); }
+      else { set.add(currentHost); await save('Disabled on site'); }
+      config.disabledSites = [...set];
+    }
     await setConfig(config);
     renderSite();
   });
@@ -62,9 +69,16 @@ function render() {
 
 function renderSite() {
   siteHost.textContent = currentHost || 'No active site';
-  const disabled = currentHost ? (config.disabledSites || []).includes(currentHost) : false;
-  siteToggle.textContent = disabled ? 'Enable here' : 'Disable here';
-  siteToggle.disabled = !currentHost;
+  const mode = config.siteMode || 'blocklist';
+  if (!currentHost) { siteToggle.textContent = 'Unavailable'; siteToggle.disabled = true; return; }
+  if (mode === 'allowlist') {
+    const allowed = (config.allowedSites || []).includes(currentHost);
+    siteToggle.textContent = allowed ? 'Remove from allowlist' : 'Allow this site';
+  } else {
+    const disabled = (config.disabledSites || []).includes(currentHost);
+    siteToggle.textContent = disabled ? 'Enable here' : 'Disable here';
+  }
+  siteToggle.disabled = false;
 }
 
 function renderPlatforms() {

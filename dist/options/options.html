@@ -62,10 +62,25 @@
     </section>
 
     <section class="card">
-      <h2>Disabled Sites</h2>
-      <p class="muted">One host per line (example: <code>example.com</code>). Soteria won't run on these hosts.</p>
-      <textarea id="disabledSites" rows="5"></textarea>
-      <button id="saveSites" class="primary">Save Sites</button>
+      <h2>Site Scope</h2>
+      <p class="muted">Blocklist: run everywhere except disabled sites. Allowlist: run only on allowed sites (if allowlist empty, runs everywhere).</p>
+      <label class="field"><span>Mode</span>
+        <select id="siteMode">
+          <option value="blocklist">Blocklist</option>
+          <option value="allowlist">Allowlist</option>
+        </select>
+      </label>
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <h3>Disabled Sites</h3>
+          <textarea id="disabledSites" rows="5"></textarea>
+        </div>
+        <div>
+          <h3>Allowed Sites</h3>
+          <textarea id="allowedSites" rows="5"></textarea>
+        </div>
+      </div>
+      <button id="saveSites" class="primary">Save Site Scope</button>
     </section>
 
     <section class="card">
