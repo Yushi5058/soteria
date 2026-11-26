@@ -39,7 +39,14 @@ npm test
 - Built-in regex/literal rules: `extension/src/shared/rules.ts`.
 - Keep patterns specific to reduce false positives.
 - Use `mask: "scramble"` for secrets, `random-word` for names/places when layout readability matters.
+- Custom names/places are case-insensitive; names <2 chars and places <3 chars ignored.
 - Add Rust tests in `engine/src/lib.rs` for engine behavior; extension tests in `extension/test/`.
+
+## Social/contact masking notes
+
+- WhatsApp/LinkedIn selectors live in `extension/src/shared/default-config.json`; prefer stable attrs/testids.
+- Content script also has heuristic name/phone pass for social/contact contexts (`scanNameLikeText`) and best-effort profile-image blur (`maybeMaskImage`).
+- Heuristics can over/under-mask; validate on live DOM and adjust selectors/regex carefully.
 
 ## Build & packaging
 

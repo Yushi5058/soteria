@@ -55,6 +55,9 @@ var default_config_default = {
         ".msg-s-message-group__name",
         ".profile-card-name",
         ".feed-shared-actor__name",
+        ".artdeco-entity-lockup__title",
+        ".text-heading-xlarge",
+        ".pv-text-details__left-panel h1",
         "span[aria-hidden='true']"
       ]
     },
@@ -65,9 +68,13 @@ var default_config_default = {
       hostPatterns: ["web.whatsapp.com"],
       selectors: [
         "span[title]",
-        "div[role='rowheader'] span",
+        "div[role='rowheader'] span[dir='auto']",
         "header span[dir='auto']",
-        "[data-testid='conversation-info-header-chat-title']"
+        "[data-testid='conversation-info-header-chat-title']",
+        "[data-testid='cell-frame-title'] span",
+        "[data-testid='conversation-panel-header'] span[title]",
+        "div[data-testid='chat-list'] span[title]",
+        "section div[role='button'] span[dir='auto']"
       ]
     },
     facebook: {

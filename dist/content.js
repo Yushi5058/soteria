@@ -55,6 +55,9 @@ var default_config_default = {
         ".msg-s-message-group__name",
         ".profile-card-name",
         ".feed-shared-actor__name",
+        ".artdeco-entity-lockup__title",
+        ".text-heading-xlarge",
+        ".pv-text-details__left-panel h1",
         "span[aria-hidden='true']"
       ]
     },
@@ -65,9 +68,13 @@ var default_config_default = {
       hostPatterns: ["web.whatsapp.com"],
       selectors: [
         "span[title]",
-        "div[role='rowheader'] span",
+        "div[role='rowheader'] span[dir='auto']",
         "header span[dir='auto']",
-        "[data-testid='conversation-info-header-chat-title']"
+        "[data-testid='conversation-info-header-chat-title']",
+        "[data-testid='cell-frame-title'] span",
+        "[data-testid='conversation-panel-header'] span[title]",
+        "div[data-testid='chat-list'] span[title]",
+        "section div[role='button'] span[dir='auto']"
       ]
     },
     facebook: {
@@ -201,7 +208,8 @@ var BUILTIN_RULES = [
   { id: "jwt", category: "apiKeys", pattern: "\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b", mask: "scramble", description: "JWT" },
   { id: "generic-secret", category: "apiKeys", pattern: `\\b(?:api[_-]?key|secret|token|password|passwd|pwd)\\b\\s*[:=]\\s*["']?[A-Za-z0-9\\-._~+/]{16,}["']?`, mask: "scramble", description: "Generic secret assignment" },
   { id: "email", category: "personalNames", pattern: "\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b", mask: "scramble", description: "Email address" },
-  { id: "phone", category: "addressesPlaces", pattern: "\\b(?:\\+?\\d{1,3}[\\s.-]?)?(?:\\(\\d{2,4}\\)|\\d{2,4})[\\s.-]\\d{3,4}[\\s.-]\\d{3,4}\\b", mask: "scramble", description: "Phone number" },
+  { id: "phone", category: "addressesPlaces", pattern: "\\b(?:\\+?\\d{1,3}[\\s().-]*)?(?:\\(?\\d{2,4}\\)?[\\s().-]*)\\d{3,4}[\\s().-]*\\d{3,4}\\b", mask: "scramble", description: "Phone number" },
+  { id: "phone-compact", category: "addressesPlaces", pattern: "\\b\\+\\d{8,15}\\b", mask: "scramble", description: "International phone number" },
   { id: "street-address", category: "addressesPlaces", pattern: "\\b\\d{1,5}\\s+[A-Z][a-zA-Z]+(?:\\s+[A-Z][a-zA-Z]+){0,3}\\s+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Court|Ct|Way|Place|Pl)\\.?\\b", mask: "random-word", description: "Street address" },
   { id: "postal-code", category: "addressesPlaces", pattern: "\\b\\d{5}(?:-\\d{4})?\\b|\\b[A-Z]\\d[A-Z][ -]?\\d[A-Z]\\d\\b", mask: "scramble", description: "Postal code" },
   { id: "institution", category: "addressesPlaces", pattern: "\\b[A-Z][a-zA-Z&']+(?:\\s+[A-Z][a-zA-Z&']+){0,4}\\s+(?:University|College|Institute|School|Academy|Hospital|Medical Center|Company|Corporation|Inc\\.?|LLC|Ltd\\.?|GmbH)\\b", mask: "random-word", description: "Institution/workplace" }
@@ -325,6 +333,7 @@ var processedText = /* @__PURE__ */ new WeakSet();
 var processedAttr = /* @__PURE__ */ new WeakMap();
 var originalAttrs = /* @__PURE__ */ new WeakMap();
 var trackedAttrElements = /* @__PURE__ */ new Set();
+var maskedImages = /* @__PURE__ */ new WeakSet();
 var MAX_BATCH_CHARS = 12e3;
 var MAX_BATCH_ITEMS = 300;
 var config = null;
@@ -459,6 +468,7 @@ async function flush() {
     } catch {
     }
   }
+  scanNameLikeText(textJobs);
   if (!textJobs.length && !attrJobs.length) return;
   const batch = [];
   for (const j of textJobs) batch.push({ id: `t:${j.id}`, text: j.text });
@@ -495,6 +505,7 @@ function collect(node, textJobs, attrJobs) {
   if (!(node instanceof Element)) return;
   if (SKIP_TAGS.has(node.tagName)) return;
   if (node.closest('[data-soteria-masked="1"]') || node.classList?.contains("soteria-mask")) return;
+  maybeMaskImage(node);
   for (const attr of ATTRS) {
     const val = node.getAttribute(attr);
     if (!val?.trim()) continue;
@@ -522,6 +533,30 @@ function maybeCollectText(node, textJobs) {
   }
   processedText.add(node);
   textJobs.push({ id: nextId(), node, text });
+}
+var NAMEISH_RE = /\b(?:\+?\d[\d\s().-]{7,}\d|[A-ZÀ-ÖØ-Ý][\p{L}'’-]{1,}(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’-]{1,}){0,2})\b/gu;
+function likelyNameContext(el) {
+  const hint = `${el.getAttribute("aria-label") || ""} ${el.getAttribute("title") || ""} ${el.className || ""} ${el.getAttribute("data-testid") || ""}`.toLowerCase();
+  return /(name|author|user|profile|contact|sender|participant|member|conversation|chat|account|title)/.test(hint) || !!el.closest('header, [role="rowheader"], [data-testid*="name"], [data-testid*="author"], [data-testid*="conversation"], [data-testid*="chat"], [class*="name"], [class*="author"], [class*="user"]');
+}
+function scanNameLikeText(textJobs) {
+  if (!config?.categories.socialMedia.enabled) return;
+  const seen = new Set(textJobs.map((j) => j.node));
+  const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
+  let node;
+  while (node = walker.nextNode()) {
+    const t = node;
+    if (seen.has(t) || processedText.has(t)) continue;
+    const parent = t.parentElement;
+    if (!parent || SKIP_TAGS.has(parent.tagName) || parent.closest('[data-soteria-masked="1"], .soteria-mask')) continue;
+    if (!likelyNameContext(parent)) continue;
+    const text = t.nodeValue || "";
+    if (!text.trim() || text.length > 120) continue;
+    if (!NAMEISH_RE.test(text)) continue;
+    NAMEISH_RE.lastIndex = 0;
+    processedText.add(t);
+    textJobs.push({ id: nextId(), node: t, text });
+  }
 }
 function applyTextMask(node, result, mode) {
   const parent = node.parentElement;
@@ -560,11 +595,44 @@ function applyAttrMask(el, attr, maskedValue) {
   trackedAttrElements.add(el);
   if (current !== maskedValue) el.setAttribute(attr, maskedValue);
 }
+function isLikelyProfileImage(img) {
+  const src = (img.currentSrc || img.src || "").toLowerCase();
+  if (!src || src.startsWith("data:") || src.endsWith(".svg")) return false;
+  const alt = (img.alt || "").toLowerCase();
+  const cls = (img.className || "").toString().toLowerCase();
+  const id = (img.id || "").toLowerCase();
+  const hint = `${alt} ${cls} ${id} ${src}`;
+  const contextHint = (img.closest('[data-testid], [aria-label], header, [role="img"]')?.textContent || "").toLowerCase().slice(0, 120);
+  const profileWords = /(profile|avatar|picture|photo|headshot|pfp|user|member|contact|person|account)/;
+  const uiWords = /(icon|logo|emoji|badge|sticker|button|sprite)/;
+  if (uiWords.test(hint)) return false;
+  const rect = img.getBoundingClientRect();
+  const sizeOk = rect.width >= 24 && rect.width <= 160 && rect.height >= 24 && rect.height <= 160;
+  const ratio = rect.width / Math.max(1, rect.height);
+  const ratioOk = ratio > 0.6 && ratio < 1.6;
+  const hasHint = profileWords.test(hint) || profileWords.test(contextHint) || img.closest('[data-testid*="avatar"], [data-testid*="profile"], [class*="avatar"], [class*="profile"], img[alt*="profile" i]') != null;
+  return sizeOk && ratioOk && hasHint;
+}
+function maybeMaskImage(el) {
+  if (!(el instanceof HTMLImageElement)) return;
+  if (maskedImages.has(el)) return;
+  if (!isLikelyProfileImage(el)) return;
+  el.style.filter = "blur(8px)";
+  el.style.webkitFilter = "blur(8px)";
+  el.setAttribute("data-soteria-image-masked", "1");
+  maskedImages.add(el);
+}
 function unmaskAll() {
   document.querySelectorAll('[data-soteria-masked="1"]').forEach((span) => {
     const orig = span.getAttribute("data-soteria-original");
     const replacement = document.createTextNode(orig ?? span.textContent ?? "");
     span.replaceWith(replacement);
+  });
+  document.querySelectorAll('[data-soteria-image-masked="1"]').forEach((img) => {
+    const el = img;
+    el.style.filter = "";
+    el.style.webkitFilter = "";
+    el.removeAttribute("data-soteria-image-masked");
   });
   trackedAttrElements.forEach((el) => {
     const map = originalAttrs.get(el);

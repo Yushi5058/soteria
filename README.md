@@ -16,6 +16,7 @@ Codeberg is the default remote. Pushes to `origin` auto-mirror to GitHub (config
 - **Shadow DOM support**: traverses open `shadowRoot`s and scans visible attributes (`aria-label`, `title`, `alt`, `placeholder`).
 - **Screen-share anti-doxxing presets**: social media selectors for YouTube, Instagram, LinkedIn, WhatsApp Web, Facebook, and X.
 - **PII & secret detection**: GitHub/Stripe/AWS/Bearer/JWT/generic secrets, custom names, emails, phone numbers, addresses, postal codes, institutions/workplaces.
+- **Social/contact heuristics**: best-effort name/phone masking in social/contact contexts (including unknown WhatsApp numbers/group labels) and profile-image blur heuristic.
 - **Deterministic masking**: same value maps to same scramble/random word during a session for visual consistency.
 - **User-friendly config**: popup quick controls, options page category toggles, custom name/place lists, JSON import/export with validation, reset to default.
 - **Cross-browser packaging**: MV3 manifest with Firefox compatibility settings; outputs `dist/` and `soteria-v1.0.0.xpi`.
@@ -81,6 +82,8 @@ npm run package
 - Schema: `config.schema.json`
 - Default config: `extension/src/shared/default-config.json`
 - Import/export uses schema validation and reports clear errors in Options UI.
+- Custom names are case-insensitive. Add surnames/variants separately if needed (e.g. `Chakroun`).
+- Heuristic masking is best-effort; review/tune selectors and rules for your workflow.
 
 ## Security & privacy model
 

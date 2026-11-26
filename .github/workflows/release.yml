@@ -17,6 +17,8 @@ jobs:
           node-version: 20
       - name: Install wasm-pack
         run: cargo install wasm-pack --locked
+      - name: Install extension dependencies
+        run: cd extension && npm install
       - name: Version check
         run: node scripts/check-version.mjs
       - name: Test

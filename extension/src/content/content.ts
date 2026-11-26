@@ -10,6 +10,7 @@ const processedText = new WeakSet<Text>();
 const processedAttr = new WeakMap<Element, Set<string>>();
 const originalAttrs = new WeakMap<Element, Map<string, string>>();
 const trackedAttrElements = new Set<Element>();
+const maskedImages = new WeakSet<HTMLImageElement>();
 const MAX_BATCH_CHARS = 12000;
 const MAX_BATCH_ITEMS = 300;
 
@@ -158,6 +159,7 @@ async function flush() {
   for (const sel of activeSelectors) {
     try { document.querySelectorAll(sel).forEach((el) => collect(el, textJobs, attrJobs)); } catch {}
   }
+  scanNameLikeText(textJobs);
 
   if (!textJobs.length && !attrJobs.length) return;
 
@@ -200,6 +202,8 @@ function collect(node: Node, textJobs: any[], attrJobs: any[]) {
   if (SKIP_TAGS.has(node.tagName)) return;
   if (node.closest('[data-soteria-masked="1"]') || node.classList?.contains('soteria-mask')) return;
 
+  maybeMaskImage(node);
+
   for (const attr of ATTRS) {
     const val = node.getAttribute(attr);
     if (!val?.trim()) continue;
@@ -223,6 +227,34 @@ function maybeCollectText(node: Text, textJobs: any[]) {
   if (!text.trim() || text.length < 2) { processedText.add(node); return; }
   processedText.add(node);
   textJobs.push({ id: nextId(), node, text });
+}
+
+const NAMEISH_RE = /\b(?:\+?\d[\d\s().-]{7,}\d|[A-ZÀ-ÖØ-Ý][\p{L}'’-]{1,}(?:\s+[A-ZÀ-ÖØ-Ý][\p{L}'’-]{1,}){0,2})\b/gu;
+
+function likelyNameContext(el: Element): boolean {
+  const hint = `${el.getAttribute('aria-label') || ''} ${el.getAttribute('title') || ''} ${el.className || ''} ${(el.getAttribute('data-testid') || '')}`.toLowerCase();
+  return /(name|author|user|profile|contact|sender|participant|member|conversation|chat|account|title)/.test(hint) || !!el.closest('header, [role="rowheader"], [data-testid*="name"], [data-testid*="author"], [data-testid*="conversation"], [data-testid*="chat"], [class*="name"], [class*="author"], [class*="user"]');
+}
+
+function scanNameLikeText(textJobs: { id: string; node: Text; text: string }[]) {
+  if (!config?.categories.socialMedia.enabled) return;
+  // Heuristic pass: mask obvious name/phone tokens in social/contact contexts (WhatsApp unknown numbers, group labels).
+  const seen = new Set<Text>(textJobs.map((j) => j.node));
+  const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
+  let node: Node | null;
+  while ((node = walker.nextNode())) {
+    const t = node as Text;
+    if (seen.has(t) || processedText.has(t)) continue;
+    const parent = t.parentElement;
+    if (!parent || SKIP_TAGS.has(parent.tagName) || parent.closest('[data-soteria-masked="1"], .soteria-mask')) continue;
+    if (!likelyNameContext(parent)) continue;
+    const text = t.nodeValue || '';
+    if (!text.trim() || text.length > 120) continue;
+    if (!NAMEISH_RE.test(text)) continue;
+    NAMEISH_RE.lastIndex = 0;
+    processedText.add(t);
+    textJobs.push({ id: nextId(), node: t, text });
+  }
 }
 
 function applyTextMask(node: Text, result: ScanResult, mode: MaskMode) {
@@ -267,11 +299,46 @@ function applyAttrMask(el: Element, attr: string, maskedValue: string) {
   if (current !== maskedValue) el.setAttribute(attr, maskedValue);
 }
 
+function isLikelyProfileImage(img: HTMLImageElement): boolean {
+  const src = (img.currentSrc || img.src || '').toLowerCase();
+  if (!src || src.startsWith('data:') || src.endsWith('.svg')) return false;
+  const alt = (img.alt || '').toLowerCase();
+  const cls = (img.className || '').toString().toLowerCase();
+  const id = (img.id || '').toLowerCase();
+  const hint = `${alt} ${cls} ${id} ${src}`;
+  const contextHint = (img.closest('[data-testid], [aria-label], header, [role="img"]')?.textContent || '').toLowerCase().slice(0, 120);
+  const profileWords = /(profile|avatar|picture|photo|headshot|pfp|user|member|contact|person|account)/;
+  const uiWords = /(icon|logo|emoji|badge|sticker|button|sprite)/;
+  if (uiWords.test(hint)) return false;
+  const rect = img.getBoundingClientRect();
+  const sizeOk = rect.width >= 24 && rect.width <= 160 && rect.height >= 24 && rect.height <= 160;
+  const ratio = rect.width / Math.max(1, rect.height);
+  const ratioOk = ratio > 0.6 && ratio < 1.6;
+  const hasHint = profileWords.test(hint) || profileWords.test(contextHint) || img.closest('[data-testid*="avatar"], [data-testid*="profile"], [class*="avatar"], [class*="profile"], img[alt*="profile" i]') != null;
+  return sizeOk && ratioOk && hasHint;
+}
+
+function maybeMaskImage(el: Element) {
+  if (!(el instanceof HTMLImageElement)) return;
+  if (maskedImages.has(el)) return;
+  if (!isLikelyProfileImage(el)) return;
+  el.style.filter = 'blur(8px)';
+  el.style.webkitFilter = 'blur(8px)';
+  el.setAttribute('data-soteria-image-masked', '1');
+  maskedImages.add(el);
+}
+
 function unmaskAll() {
   document.querySelectorAll('[data-soteria-masked="1"]').forEach((span) => {
     const orig = span.getAttribute('data-soteria-original');
     const replacement = document.createTextNode(orig ?? span.textContent ?? '');
     span.replaceWith(replacement);
+  });
+  document.querySelectorAll('[data-soteria-image-masked="1"]').forEach((img) => {
+    const el = img as HTMLElement;
+    el.style.filter = '';
+    el.style.webkitFilter = '';
+    el.removeAttribute('data-soteria-image-masked');
   });
   trackedAttrElements.forEach((el) => {
     const map = originalAttrs.get(el);

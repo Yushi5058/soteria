@@ -11,6 +11,8 @@ Soteria protects users during screen sharing by automatically masking sensitive 
 - Exposure of addresses, schools/universities, workplaces, institutions, and location clues.
 - Exposure of secrets/tokens visible in dashboards, logs, admin panels, or devtools-adjacent web UIs.
 - Dynamic SPA updates where sensitive text appears after initial load.
+- Social/contact surfaces where names/phone numbers appear (e.g. WhatsApp chat headers, contact info, group participant labels), including unknown contacts.
+- Profile imagery (best-effort heuristic blur for likely avatar/profile photos).
 
 ### Out of scope / limitations
 - Native apps outside browser.
@@ -29,6 +31,11 @@ Soteria protects users during screen sharing by automatically masking sensitive 
 ## Feature roadmap
 
 - v1.0.0: core engine, social presets, popup/options, docs, packaging.
-- v1.1.x: site-specific rule packs, per-domain allow/deny lists, better selector heuristics.
+- v1.1.x: site-specific rule packs, per-domain allow/deny lists, better selector heuristics, stronger name/phone heuristics.
 - v1.2.x: optional OCR/canvas hooks (explicit opt-in), enterprise policy export, audit log.
 - v2.x: browser-native ML-assisted entity detection (local-only), synced profiles.
+
+## Notes
+
+- Custom name matching is case-insensitive.
+- Phone/profile heuristics are best-effort; false positives/negatives possible. Tune selectors/rules in `extension/src/shared/`.
