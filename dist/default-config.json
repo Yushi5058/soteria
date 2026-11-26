@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "enabled": true,
+  "maskMode": "random-word",
+  "categories": {
+    "apiKeys": { "enabled": true },
+    "personalNames": { "enabled": true },
+    "addressesPlaces": { "enabled": true },
+    "socialMedia": { "enabled": true }
+  },
+  "customNames": ["Yassine", "Roa", "Elias", "Amina", "Noah", "Maya"],
+  "customPlaces": ["Springfield High School", "Acme University", "123 Main Street"],
+  "customPatterns": [],
+  "platformPresets": {
+    "youtube": {
+      "id": "youtube",
+      "name": "YouTube",
+      "enabled": true,
+      "hostPatterns": ["youtube.com", "youtu.be"],
+      "selectors": [
+        "#channel-name",
+        "ytd-channel-name",
+        "#author-text",
+        "#text.ytd-comment-view-model",
+        "yt-formatted-string.ytd-channel-name",
+        "#account-name",
+        "#owner-sub-count"
+      ]
+    },
+    "instagram": {
+      "id": "instagram",
+      "name": "Instagram",
+      "enabled": true,
+      "hostPatterns": ["instagram.com"],
+      "selectors": [
+        "header section a",
+        "article header span",
+        "div[role='dialog'] span[dir='auto']",
+        "a[role='link'] span",
+        "span._ap3a"
+      ]
+    },
+    "linkedin": {
+      "id": "linkedin",
+      "name": "LinkedIn",
+      "enabled": true,
+      "hostPatterns": ["linkedin.com"],
+      "selectors": [
+        ".update-components-actor__name",
+        ".msg-overlay-bubble-header__title",
+        ".msg-s-message-group__name",
+        ".profile-card-name",
+        ".feed-shared-actor__name",
+        "span[aria-hidden='true']"
+      ]
+    },
+    "whatsapp": {
+      "id": "whatsapp",
+      "name": "WhatsApp Web",
+      "enabled": true,
+      "hostPatterns": ["web.whatsapp.com"],
+      "selectors": [
+        "span[title]",
+        "div[role='rowheader'] span",
+        "header span[dir='auto']",
+        "[data-testid='conversation-info-header-chat-title']"
+      ]
+    },
+    "facebook": {
+      "id": "facebook",
+      "name": "Facebook",
+      "enabled": true,
+      "hostPatterns": ["facebook.com", "messenger.com"],
+      "selectors": [
+        "h2 strong span",
+        "a[role='link'] span[dir='auto']",
+        "span.x193iq5w",
+        "[aria-label='Chats'] span",
+        "div[role='article'] h3"
+      ]
+    },
+    "x": {
+      "id": "x",
+      "name": "X (Twitter)",
+      "enabled": true,
+      "hostPatterns": ["x.com", "twitter.com"],
+      "selectors": [
+        "div[data-testid='User-Name'] span",
+        "a[role='link'] div[dir='ltr'] span",
+        "[data-testid='DMDrawerHeader'] span",
+        "[data-testid='conversation'] span",
+        "span.username"
+      ]
+    }
+  }
+}

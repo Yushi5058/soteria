@@ -1,0 +1,30 @@
+:root { --bg:#0f1417; --card:#171f24; --muted:#91a0aa; --text:#eef4f8; --accent:#74c69d; --line:#25323a; }
+* { box-sizing: border-box; }
+body { margin:0; font: 13px/1.4 Inter, system-ui, sans-serif; background:linear-gradient(180deg,#10181d,#0c1114); color:var(--text); width:340px; }
+.app { padding:14px; }
+.hero { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.eyebrow { margin:0; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+h1 { margin:2px 0 0; font-size:22px; }
+h2 { margin:0; font-size:13px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; }
+.field { display:flex; flex-direction:column; gap:6px; }
+select, button { font:inherit; }
+select { width:100%; background:#10181d; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px; }
+.row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.platforms { display:grid; gap:6px; }
+.platform { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-top:1px solid #1f2a31; }
+.platform:first-child { border-top:0; }
+.platform label { display:flex; gap:8px; align-items:center; }
+.footer { display:flex; justify-content:space-between; align-items:center; }
+.ghost { background:transparent; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:7px 10px; cursor:pointer; }
+.ghost:hover { border-color:#38505e; }
+.status { color:var(--muted); font-size:11px; }
+.switch,.mini-switch { position:relative; display:inline-block; width:44px; height:26px; }
+.mini-switch { width:36px; height:22px; }
+.switch input,.mini-switch input { opacity:0; width:0; height:0; }
+.switch span,.mini-switch span { position:absolute; inset:0; background:#394852; border-radius:999px; transition:.2s; cursor:pointer; }
+.switch span::before,.mini-switch span::before { content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:white; border-radius:50%; transition:.2s; }
+.mini-switch span::before { width:16px; height:16px; }
+.switch input:checked + span, .mini-switch input:checked + span { background:var(--accent); }
+.switch input:checked + span::before { transform:translateX(18px); }
+.mini-switch input:checked + span::before { transform:translateX(14px); }
