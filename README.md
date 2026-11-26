@@ -2,6 +2,13 @@
 
 Soteria is a high-performance, privacy-first browser extension for **Firefox/Floorp** and **Chromium** that hides sensitive information during screen sharing. It masks PII, secrets, and social-media identity signals directly in the page DOM before they leak into calls, recordings, or demos.
 
+## Repository
+
+- **Primary (Codeberg)**: `ssh://git@codeberg.org/yushi_61/soteria.git`
+- **Mirror (GitHub)**: `https://github.com/Yushi5058/soteria.git`
+
+Codeberg is the default remote. Pushes to `origin` auto-mirror to GitHub (configured via multiple push URLs).
+
 ## Key features
 
 - **Rust/WASM matching engine**: linear-time multi-pattern scanning with `aho-corasick` and `regex::RegexSet`.
