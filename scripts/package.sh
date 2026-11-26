@@ -6,8 +6,36 @@ cd "$ROOT"
 bash scripts/build.sh
 mkdir -p artifacts
 
-# xpi/zip are both zip archives; manifest is webextension-compatible
-( cd dist && zip -qr ../artifacts/soteria-v1.0.0.xpi . )
-( cd dist && zip -qr ../artifacts/soteria-v1.0.0.zip . )
+package_zip() {
+  local out="$1"
+  local abs="$ROOT/$out"
+  if command -v zip >/dev/null 2>&1; then
+    (cd dist && zip -qr "$abs" .)
+  elif command -v 7z >/dev/null 2>&1; then
+    (cd dist && 7z a -tzip -mx=9 "$abs" . >/dev/null)
+  elif command -v 7za >/dev/null 2>&1; then
+    (cd dist && 7za a -tzip -mx=9 "$abs" . >/dev/null)
+  elif command -v 7zz >/dev/null 2>&1; then
+    (cd dist && 7zz a -tzip -mx=9 "$abs" . >/dev/null)
+  elif command -v bsdtar >/dev/null 2>&1; then
+    bsdtar --format=zip -cf "$abs" -C dist .
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 - "$abs" <<'PY'
+import os, sys, zipfile
+out = sys.argv[1]
+with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
+    for root, _, files in os.walk('dist'):
+        for f in sorted(files):
+            p = os.path.join(root, f)
+            z.write(p, os.path.relpath(p, 'dist'))
+PY
+  else
+    echo "[soteria] no archiver found (zip/7z/7za/7zz/bsdtar/python3)" >&2
+    exit 1
+  fi
+}
+
+package_zip "artifacts/soteria-v1.0.0.xpi"
+package_zip "artifacts/soteria-v1.0.0.zip"
 cp artifacts/soteria-v1.0.0.xpi ./soteria-v1.0.0.xpi
 echo "[soteria] packaged artifacts/soteria-v1.0.0.xpi"
