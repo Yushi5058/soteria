@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Soteria Settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Soteria</p>
+        <h1>Privacy Shield Settings</h1>
+        <p class="muted">Configure categories, custom sensitive data, and import/export your config.</p>
+      </div>
+      <div class="actions">
+        <button id="exportBtn" class="ghost">Export Config (JSON)</button>
+        <label class="ghost file-label">Import Config (JSON)<input id="importInput" type="file" accept="application/json" hidden /></label>
+        <button id="resetBtn" class="danger">Reset to Default</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Protection Categories</h2>
+        <label class="toggle"><span>API Keys & Secrets</span><input id="cat-apiKeys" type="checkbox" /></label>
+        <label class="toggle"><span>Personal Names</span><input id="cat-personalNames" type="checkbox" /></label>
+        <label class="toggle"><span>Addresses, Institutions & Places</span><input id="cat-addressesPlaces" type="checkbox" /></label>
+        <label class="toggle"><span>Social Media Presets</span><input id="cat-socialMedia" type="checkbox" /></label>
+      </article>
+
+      <article class="card">
+        <h2>Masking Mode</h2>
+        <select id="maskMode">
+          <option value="blur">Blur</option>
+          <option value="scramble">Scramble Letters</option>
+          <option value="random-word">Random Word</option>
+        </select>
+        <p class="muted">Names default to random words/scramble; blur hides visually.</p>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Custom Names</h2>
+        <p class="muted">One per line or comma-separated. Example: Yassine, Roa, Elias</p>
+        <textarea id="customNames" rows="8"></textarea>
+        <button id="saveNames" class="primary">Save Names</button>
+      </article>
+      <article class="card">
+        <h2>Custom Addresses / Institutions / Places</h2>
+        <p class="muted">Add streets, cities, schools, workplaces. One per line or comma-separated.</p>
+        <textarea id="customPlaces" rows="8"></textarea>
+        <button id="savePlaces" class="primary">Save Places</button>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Social Media Platforms</h2>
+      <div id="platforms" class="platforms"></div>
+    </section>
+
+    <section class="card">
+      <h2>Status</h2>
+      <div id="status" class="status">Ready.</div>
+    </section>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

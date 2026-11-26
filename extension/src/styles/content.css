@@ -1,0 +1,18 @@
+.soteria-mask {
+  border-radius: 3px;
+  padding: 0 0.15em;
+  white-space: inherit;
+}
+.soteria-mask--blur {
+  filter: blur(5px);
+  background: rgba(20, 20, 20, 0.08);
+  color: transparent !important;
+  text-shadow: 0 0 8px rgba(0,0,0,0.45);
+  user-select: none;
+}
+.soteria-mask--scramble,
+.soteria-mask--random-word {
+  background: rgba(255, 200, 0, 0.14);
+  color: inherit;
+  border-bottom: 1px dashed rgba(120, 90, 0, 0.45);
+}

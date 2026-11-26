@@ -1,0 +1,25 @@
+:root { --bg:#f4f7f5; --card:#ffffff; --text:#17211d; --muted:#5f7068; --line:#dce5df; --accent:#1f7a5a; --danger:#b23a48; }
+* { box-sizing:border-box; }
+body { margin:0; font:14px/1.45 Inter, system-ui, sans-serif; color:var(--text); background:linear-gradient(180deg,#eef4f0,#f8fbf9); }
+.wrap { max-width:1100px; margin:0 auto; padding:28px 18px 48px; }
+.hero { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:18px; }
+.eyebrow { margin:0; text-transform:uppercase; letter-spacing:.08em; font-size:12px; color:var(--muted); }
+h1 { margin:4px 0; font-size:32px; }
+h2 { margin:0 0 12px; font-size:18px; }
+.muted { color:var(--muted); }
+.actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-bottom:14px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 1px 2px rgba(0,0,0,.02); }
+.toggle { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-top:1px solid #edf2ee; }
+.toggle:first-of-type { border-top:0; }
+select, textarea, button { font:inherit; }
+select, textarea { width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; background:#fff; color:var(--text); }
+textarea { resize:vertical; min-height:120px; }
+button, .file-label { border:1px solid var(--line); background:#fff; color:var(--text); border-radius:10px; padding:9px 12px; cursor:pointer; }
+.primary { background:var(--accent); color:white; border-color:var(--accent); margin-top:10px; }
+.danger { color:var(--danger); border-color:#e7c2c7; }
+.ghost:hover, .file-label:hover { border-color:#b7c8be; }
+.platforms { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.platform { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border:1px solid #edf2ee; border-radius:10px; }
+.status { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, monospace; font-size:12px; color:#24322c; }
+@media (max-width: 800px) { .grid, .platforms { grid-template-columns:1fr; } .hero { flex-direction:column; } .actions { justify-content:flex-start; } }

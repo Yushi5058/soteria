@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Soteria</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Screen-share shield</p>
+        <h1>Soteria</h1>
+      </div>
+      <label class="switch" aria-label="Enable Soteria">
+        <input id="enabled" type="checkbox" />
+        <span></span>
+      </label>
+    </header>
+
+    <section class="card">
+      <label class="field">
+        <span>Masking mode</span>
+        <select id="maskMode">
+          <option value="blur">Blur</option>
+          <option value="scramble">Scramble Letters</option>
+          <option value="random-word">Random Word</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h2>Social Media</h2>
+        <label class="mini-switch"><input id="cat-socialMedia" type="checkbox" /><span></span></label>
+      </div>
+      <div id="platforms" class="platforms"></div>
+    </section>
+
+    <footer class="footer">
+      <button id="openOptions" class="ghost">Open Settings</button>
+      <span id="status" class="status"></span>
+    </footer>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
