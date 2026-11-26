@@ -4,7 +4,7 @@ body { margin:0; font: 13px/1.4 Inter, system-ui, sans-serif; background:linear-
 .app { padding:14px; }
 .hero { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
 .brand { display:flex; align-items:center; gap:10px; }
-.brand-logo { width:32px; height:32px; border-radius:8px; flex:0 0 auto; }
+.brand-logo { width:32px; height:32px; border-radius:8px; flex:0 0 auto; object-fit:contain; display:block; }
 .eyebrow { margin:0; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
 h1 { margin:2px 0 0; font-size:22px; }
 h2 { margin:0; font-size:13px; }

@@ -11,7 +11,7 @@ async function copyStatic() {
   await mkdir(dist, { recursive: true });
   await mkdir(path.join(dist, 'popup'), { recursive: true });
   await mkdir(path.join(dist, 'options'), { recursive: true });
-  await mkdir(path.join(dist, 'assets'), { recursive: true });
+  await mkdir(path.join(dist, 'icons'), { recursive: true });
   await mkdir(path.join(dist, 'wasm'), { recursive: true });
 
   const manifest = JSON.parse(await readFile(path.join(src, 'manifest.json'), 'utf8'));
@@ -27,8 +27,8 @@ async function copyStatic() {
     if (existsSync(from)) await cp(from, to);
   }
 
-  const assetsDir = path.join(src, 'assets');
-  if (existsSync(assetsDir)) await cp(assetsDir, path.join(dist, 'assets'), { recursive: true });
+  const iconsDir = path.join(src, 'icons');
+  if (existsSync(iconsDir)) await cp(iconsDir, path.join(dist, 'icons'), { recursive: true });
 
   const wasmPkg = path.join(src, 'wasm/pkg');
   if (existsSync(wasmPkg)) {
